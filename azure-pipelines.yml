@@ -1,0 +1,104 @@
+trigger:
+ branches:
+   include:
+     - main
+
+pool:
+  name: ashwini
+
+stages:
+  - stage: rgbuilding
+    displayName: "build-stage"
+    jobs:
+      - job: buildjob
+        steps:
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: '1.14.3'
+
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/path/to/your/terraform/code'
+              backendServiceArm: '#name#'
+              backendAzureRmResourceGroupName: '#name#'
+              backendAzureRmStorageAccountName: '#name#'
+              backendAzureRmContainerName: '#name#'
+              backendAzureRmKey: '#name#.tfstate'
+          
+          - task: TerraformTask@5
+            displayName: terraform validate
+            inputs:
+              provider: 'azurerm'
+              command: 'validate'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/path/to/your/terraform/code'
+          
+          - task: tfsec@1
+            inputs:
+              version: 'v1.26.0'
+              args: '--format junit,json --out tfsec-results'
+              dir: '$(System.DefaultWorkingDirectory)/path/to/your/terraform/code'
+          
+          - task: TerraformTask@5
+            displayName: terraform plan
+            inputs:
+              provider: 'azurerm'
+              command: 'plan'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/path/to/your/terraform/code'
+              environmentServiceNameAzureRM: 'Antimsangram'
+
+  - stage: 
+    displayName: manualvalidation"
+    pool: server
+    dependsOn: rgbuilding
+    jobs:
+      - job: 
+        steps:
+         - task: ManualValidation@1
+           inputs:
+             notifyUsers: 'kr.ashwinikumarjha@gmail.com'
+             instructions: 'New Rg deployment requirement by client'
+  
+  - stage: rgdeploy
+    displayName: "deploy-stage-apply"
+    pool:
+     name: ashwini
+    jobs:
+      - job: 
+        steps:
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/path/to/your/terraform/code'
+            backendServiceArm: '#name#'
+            backendAzureRmResourceGroupName: '#name#'
+            backendAzureRmStorageAccountName: '#name#'
+            backendAzureRmContainerName: '#name#'
+            backendAzureRmKey: '#name#.tfstate'
+
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'apply'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/path/to/your/terraform/code'
+            environmentServiceNameAzureRM: '#name#'
+
+  # - stage: rgdestroy
+  #   displayName: "destroy-stage-after-apply"
+  #   pool:
+  #    name: ashwini
+  #   jobs:
+  #     - job: 
+  #       steps:
+  #       - task: TerraformTask@5
+  #         inputs:
+  #           provider: 'azurerm'
+  #           command: 'init'
+  #           workingDirectory: '$(System.DefaultWorkingDirectory)/path/to/your/terraform/code'
+  #           backendServiceArm: '#path#'
+  #           backendAzureRmResourceGroupName: '#path#'
+  #           backendAzureRmStorageAccountName: '#path#'
+  #           backendAzureRmContainerName: '#path#'
+  #           backendAzureRmKey: '#path#.tfstate'

@@ -1,0 +1,46 @@
+# Terraform state files
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl   # COMMIT this file — it pins provider versions
+
+# Variable files with actual values (may contain secrets)
+terraform.tfvars
+*.auto.tfvars
+!terraform.tfvars.example
+
+# Plan output files (may contain sensitive data)
+*.tfplan
+*.plan
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Override files (local developer overrides)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI configuration files
+.terraformrc
+terraform.rc
+
+# SSH keys and certificates
+*.pem
+*.pfx
+*.key
+*.crt
+*.cer
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
